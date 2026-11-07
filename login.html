@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — E-SPPD Dinas Kesehatan Kota Tangerang Selatan</title>
+    <link rel="icon" type="image/png" href="assets/images/brand/logo.png">
+    <!-- Redirect instan jika sudah login sebelum elemen apapun dirender -->
+    <script>
+        (function () {
+            try {
+                var raw = localStorage.getItem('SPPD_AUTH_USER');
+                var user = raw ? JSON.parse(raw) : null;
+                var now = Date.now();
+                var maxIdle = 15 * 60 * 1000;
+                var lastAct = Number(localStorage.getItem('SPPD_AUTH_LAST_ACTIVE') || (user && user.lastActivity) || 0);
+                var isExpired = lastAct > 0 && (now - lastAct > maxIdle);
+
+                if (isExpired) {
+                    localStorage.removeItem('SPPD_AUTH_USER');
+                    localStorage.removeItem('SPPD_AUTH_LAST_ACTIVE');
+                    sessionStorage.setItem('SPPD_AUTH_EXPIRED_MSG', '1');
+                } else if (user && user.email && !user.isDemo && user.verifiedByServer === true) {
+                    window.location.replace('index.html');
+                }
+            } catch (e) { }
+        })();
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- Pure Static CSS (Tanpa Tailwind CDN Runtime) agar 100% bebas kedip / blink saat reload -->
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background-color: #022c22;
+            background-image: linear-gradient(135deg, #020617 0%, #042f2e 50%, #0f172a 100%);
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #1e293b;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .login-viewport {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .login-card {
+            position: relative;
+            width: 100%;
+            max-width: 28rem;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 2rem;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .glow-top {
+            position: absolute;
+            top: -6rem;
+            right: -6rem;
+            width: 12rem;
+            height: 12rem;
+            background: rgba(45, 212, 191, 0.18);
+            border-radius: 9999px;
+            filter: blur(40px);
+            pointer-events: none;
+        }
+
+        .glow-bottom {
+            position: absolute;
+            bottom: -6rem;
+            left: -6rem;
+            width: 12rem;
+            height: 12rem;
+            background: rgba(52, 211, 153, 0.18);
+            border-radius: 9999px;
+            filter: blur(40px);
+            pointer-events: none;
+        }
+
+        .brand-wrap {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-box {
+            width: 5rem;
+            height: 5rem;
+            border-radius: 1rem;
+            background: #ffffff;
+            padding: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ccfbf1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .badge-protected {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #f0fdfa;
+            color: #115e59;
+            border: 1px solid rgba(153, 246, 228, 0.6);
+            margin-bottom: 0.5rem;
+        }
+
+        .title-main {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: -0.025em;
+            line-height: 1.25;
+        }
+
+        .subtitle-dinkes {
+            font-size: 0.75rem;
+            color: #0f766e;
+            font-weight: 600;
+            margin-top: 0.125rem;
+        }
+
+        .desc-text {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 0.5rem;
+            max-width: 20rem;
+            line-height: 1.6;
+        }
+
+        .error-box {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            font-size: 0.75rem;
+            color: #be123c;
+            font-weight: 500;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        .signin-area {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        /* Wrapper stabil dengan tinggi tetap agar tombol Google tidak menggeser layout saat dimuat */
+        .gsi-slot {
+            position: relative;
+            width: 280px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gsi-skeleton {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+        }
+
+        #g_id_signin_container {
+            position: relative;
+            z-index: 2;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer-portal {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+            font-size: 10px;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.375rem;
+        }
+
+        .footer-portal svg {
+            width: 0.875rem;
+            height: 0.875rem;
+            color: #0d9488;
+            flex-shrink: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+    <!-- Google Identity Services (GIS SDK) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body>
+
+    <main id="authLoginOverlay" class="login-viewport">
+        <div class="login-card">
+            <div class="glow-top"></div>
+            <div class="glow-bottom"></div>
+
+            <!-- Brand Logo & Header -->
+            <div class="brand-wrap">
+                <div class="logo-box">
+                    <img src="assets/images/brand/logo.png" alt="Logo E-SPPD Dinas Kesehatan">
+                </div>
+                <div class="badge-protected">
+                    <span>🔒</span>
+                    <span>Sistem Informasi Terproteksi</span>
+                </div>
+                <h1 class="title-main">E-SPPD Dinkes</h1>
+                <p class="subtitle-dinkes">Dinas Kesehatan Kota Tangerang Selatan</p>
+                <p class="desc-text">
+                    Silakan masuk menggunakan akun Google resmi untuk mengakses pengelolaan Surat Perintah Perjalanan
+                    Dinas.
+                </p>
+            </div>
+
+            <!-- Pesan Error (Jika Ada) -->
+            <div id="authErrorMessage" class="error-box hidden"></div>
+
+            <!-- Kotak Tombol Google Sign In -->
+            <div class="signin-area">
+                <div class="gsi-slot">
+                    <div id="gsiSkeleton" class="gsi-skeleton">
+                        <span>Memuat Google Sign-In...</span>
+                    </div>
+                    <div id="g_id_signin_container"></div>
+                </div>
+            </div>
+
+            <!-- Footer Login Portal -->
+            <div class="footer-portal">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                </svg>
+                <span>Google Identity Services • OAuth 2.0 Security</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODUL AUTENTIKASI -->
+    <script src="assets/js/auth.js"></script>
+</body>
+
+</html>

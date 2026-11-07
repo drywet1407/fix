@@ -1,0 +1,40 @@
+# Konfigurasi Netlify untuk E-SPPD Dinas Kesehatan Kota Tangerang Selatan
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[dev]
+  framework = "#static"
+  publish = "."
+  port = 8888
+  autoLaunch = true
+
+# Proxy API Google Apps Script agar URL asli GAS tidak pernah terlihat di Network / Inspect Element
+[[redirects]]
+  from = "/api/gas"
+  to = "/.netlify/functions/gas-proxy"
+  status = 200
+  force = true
+
+# Endpoint Verifikasi Google Auth & Whitelist Email di Server Netlify
+[[redirects]]
+  from = "/api/auth"
+  to = "/.netlify/functions/auth-config"
+  status = 200
+  force = true
+
+# Security Headers & CORS untuk mengizinkan akses dari Five Server lokal ke /api/*
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, X-Sppd-Auth"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
